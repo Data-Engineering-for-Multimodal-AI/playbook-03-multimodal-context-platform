@@ -1,0 +1,19 @@
+google-cloud-storage>=2.8.0
+google-cloud-documentai>=2.16.0
+google-cloud-vision>=3.4.0
+google-cloud-aiplatform>=1.38.0
+vertexai
+python-dotenv>=1.0.0
+tqdm>=4.66.0
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Note: Before running this pipeline, you need to:
+# 1. Create Document AI processors for the following document types:
+#    - Driving License Parser
+#    - W2 Parser
+#    - Form Parser
+#    - Utility Bill Parser
+#    - Bank Statement Parser
+# 2. Replace the processor IDs in the code with your own processor IDs
+# 3. Set up Google Cloud authentication 
