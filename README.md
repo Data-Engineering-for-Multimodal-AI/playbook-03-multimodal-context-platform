@@ -1,4 +1,4 @@
-# KYC Document Retrieval Pipeline
+# Multimodal Document Retrieval Pipeline
 
 A semantic search system for KYC (Know Your Customer) documents using Google Cloud's Document AI, Vertex AI, and Vector Search.
 
