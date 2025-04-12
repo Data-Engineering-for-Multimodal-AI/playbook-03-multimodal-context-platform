@@ -276,4 +276,21 @@ For a sample dataset of 20-30 documents, costs should be minimal (<$10) for setu
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+The MIT License is a permissive license that allows for reuse with few restrictions. You are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the software, provided that the original copyright notice and permission notice appear in all copies.
+
+### What You Can Do
+
+- Use the code commercially
+- Modify the code
+- Distribute the code
+- Place warranty
+- Use the code privately or publicly
+
+### Limitations
+
+- The license provides no warranty
+- The authors/maintainers are not liable for any damages or issues arising from the use of this software
+
+This open-source license is designed to be simple and business-friendly while requiring that the license text itself and copyright notice be preserved. 
