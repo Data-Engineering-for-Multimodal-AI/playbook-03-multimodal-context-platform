@@ -15,9 +15,6 @@ def main(project_id, location, bucket_name, index_name, dimensions=768):
     print(f"Using bucket: {bucket_name}")
     print(f"Index name: {index_name}")
 
-    # Initialize vector search
-    vector_search = VectorSearch(project_id, location, index_name)
-
     # Create and deploy the index
     print("Creating and deploying vector search index...")
     print("NOTE: This process will take 30-45 minutes to complete")
@@ -25,6 +22,7 @@ def main(project_id, location, bucket_name, index_name, dimensions=768):
           "Run scripts/teardown_vector_search.py when you're done.")
 
     try:
+        vector_search = VectorSearch(project_id, location, index_name)
         vector_search.create_index(bucket_name, dimensions)
         print("Vector search index created and deployed successfully!")
         return True
