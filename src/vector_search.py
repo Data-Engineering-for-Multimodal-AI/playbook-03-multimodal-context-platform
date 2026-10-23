@@ -1,12 +1,6 @@
 from google.cloud import aiplatform
-from google.cloud.aiplatform.matching_engine.matching_engine_index_config import (
-    MatchingEngineIndexConfig,
-    TreeAhConfig,
-    AlgorithmConfig
-)
-from typing import List, Dict
-import json
-import time
+from google.cloud.aiplatform.matching_engine.matching_engine_index_endpoint import Namespace
+from typing import List, Dict, Optional
 
 class VectorSearch:
     def __init__(self, project_id: str, location: str, index_name: str = "kyc-documents-index"):
@@ -19,7 +13,7 @@ class VectorSearch:
         # Initialize Vertex AI
         aiplatform.init(project=project_id, location=location)
     
-    def create_index(self, bucket_name: str):
+    def create_index(self, bucket_name: str, dimensions: int = 768):
         """Create a vector search index following the setup process."""
         try:
             # Step 1: Create the index
@@ -27,7 +21,7 @@ class VectorSearch:
             self.index = aiplatform.MatchingEngineIndex.create_tree_ah_index(
                 display_name=self.index_name,
                 contents_delta_uri=f"gs://{bucket_name}/vector-search/document-embeddings",
-                dimensions=768,  # Standard dimension for text-embedding-005
+                dimensions=dimensions,  # EMBEDDING_DIMENSIONS, 768 by default
                 approximate_neighbors_count=150,
             )
             
@@ -77,25 +71,25 @@ class VectorSearch:
         
         print(f"Upserting {len(datapoints)} datapoints...")
         
-        # Prepare datapoints for upsertion
-        formatted_datapoints = []
-        for datapoint in datapoints:
-            formatted_datapoints.append({
-                "id": datapoint["id"],
-                "embedding": datapoint["embedding"],
-                "restricts": [
-                    {
-                        "namespace": "document_type",
-                        "allow": [datapoint["metadata"]["document_type"]]
-                    }
-                ]
-            })
-        
+        # Prepare datapoints for upsertion (upsert needs an index created with
+        # index_update_method="STREAM_UPDATE"; create_index() makes a batch index)
+        from google.cloud.aiplatform_v1.types import IndexDatapoint
+        formatted_datapoints = [
+            IndexDatapoint(
+                datapoint_id=datapoint["id"],
+                feature_vector=datapoint["embedding"],
+                restricts=[IndexDatapoint.Restriction(namespace="category",
+                                                      allow_list=[datapoint["category"]])],
+            )
+            for datapoint in datapoints
+        ]
+
         # Upsert the datapoints
-        self.index.upsert_datapoints(formatted_datapoints)
+        self.index.upsert_datapoints(datapoints=formatted_datapoints)
         print("Datapoints upserted successfully!")
     
-    def search(self, query_embedding: List[float], num_neighbors: int = 5, filters: Dict = None) -> List[Dict]:
+    def search(self, query_embedding: List[float], num_neighbors: int = 5,
+               filter_category: Optional[str] = None) -> List[Dict]:
         """Search for similar documents with optional filters."""
         if not self.index_endpoint:
             raise ValueError("Index endpoint not created. Call create_index() first.")
@@ -109,9 +103,9 @@ class VectorSearch:
             "num_neighbors": num_neighbors
         }
         
-        # Add filters if provided
-        if filters:
-            search_request["filter"] = filters
+        # Restrict to one document category (find_neighbors takes a list of Namespace)
+        if filter_category:
+            search_request["filter"] = [Namespace("category", [filter_category], [])]
         
         # Perform the search
         response = self.index_endpoint.find_neighbors(**search_request)
@@ -122,7 +116,6 @@ class VectorSearch:
             results.append({
                 "id": neighbor.id,
                 "distance": neighbor.distance,
-                "metadata": neighbor.metadata
             })
         
         return results

@@ -1,0 +1,44 @@
+[project]
+name = "playbook-03-multimodal-context-platform"
+version = "2026.10"
+description = "KYC document retrieval: extract, embed and search identity, tax, utility and bank documents (Data Engineering for Multimodal AI, Chapter 3)"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.12"
+dependencies = [
+    # Local mode (laptop CPU, no cloud account)
+    "numpy>=1.26",
+    "pypdf>=5.0",
+    "sentence-transformers>=4.0",
+    "torch>=2.3",
+    "tqdm>=4.66",
+    # Google Cloud mode (as printed in the book)
+    "google-cloud-aiplatform>=1.70",
+    "google-cloud-documentai>=2.30",
+    "google-cloud-storage>=2.18",
+    "google-genai>=1.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    # Only needed to regenerate the synthetic documents in data/
+    "pillow>=10.2",
+    "reportlab>=4.2",
+]
+
+[tool.uv]
+package = false
+
+# On Linux, PyPI's torch is the CUDA build (several GB of CUDA libraries plus Triton).
+# This playbook runs on CPU, so Linux gets the CPU build. macOS and Windows use PyPI.
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

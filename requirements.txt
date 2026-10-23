@@ -1,19 +1,91 @@
-google-cloud-storage>=2.8.0
-google-cloud-documentai>=2.16.0
-google-cloud-vision>=3.4.0
-google-cloud-aiplatform>=1.38.0
-vertexai
-python-dotenv>=1.0.0
-tqdm>=4.66.0
-numpy>=1.24.0
-pandas>=2.0.0
-
-# Note: Before running this pipeline, you need to:
-# 1. Create Document AI processors for the following document types:
-#    - Driving License Parser
-#    - W2 Parser
-#    - Form Parser
-#    - Utility Bill Parser
-#    - Bank Statement Parser
-# 2. Replace the processor IDs in the code with your own processor IDs
-# 3. Set up Google Cloud authentication 
+# Generated from uv.lock by: uv export --format requirements-txt --no-dev --no-hashes --no-emit-project
+# Python >= 3.12. Edit pyproject.toml, then run 'uv lock' and re-export; don't edit this file by hand
+# (except the index line below, which uv export does not write).
+# Includes both modes: local (pypdf, sentence-transformers) and Google Cloud (Document AI, Vertex AI, google-genai).
+# On Linux, torch comes from the PyTorch CPU index (no CUDA; see pyproject.toml).
+--extra-index-url https://download.pytorch.org/whl/cpu
+annotated-doc==0.0.5
+annotated-types==0.8.0
+anyio==4.15.1
+certifi==2026.10.19
+cffi==2.1.1 ; platform_python_implementation != 'PyPy'
+charset-normalizer==3.5.2
+click==8.5.0
+cloudpickle==3.1.2
+colorama==0.4.6 ; sys_platform == 'win32'
+cryptography==50.0.2
+distro==1.9.0
+docstring-parser==0.18.0
+filelock==4.2.4
+fsspec==2026.9.0
+google-api-core==2.43.0
+google-auth==2.62.0
+google-cloud-aiplatform==2.6.0
+google-cloud-bigquery==3.46.2
+google-cloud-core==2.8.0
+google-cloud-documentai==3.16.0
+google-cloud-resource-manager==1.19.0
+google-cloud-storage==3.17.1
+google-crc32c==1.9.0
+google-genai==2.33.0
+google-resumable-media==2.11.0
+googleapis-common-protos==1.76.0
+grpc-google-iam-v1==0.14.6
+grpcio==1.84.1
+grpcio-status==1.84.1
+h11==0.16.0
+hf-xet==1.7.0 ; platform_machine == 'AMD64' or platform_machine == 'ARM64' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'arm64' or platform_machine == 'x86_64'
+httpcore==1.0.9
+httpcore2==2.16.0 ; sys_platform != 'emscripten'
+httpx==0.28.1
+httpx2==2.16.0
+httpx2-jsfetch==1.0 ; sys_platform == 'emscripten'
+huggingface-hub==2.2.0
+idna==3.20
+jinja2==3.1.6
+joblib==1.6.0
+markdown-it-py==4.2.0
+markupsafe==3.0.4
+mdurl==0.1.2
+mpmath==1.3.0
+narwhals==2.27.1
+networkx==3.7
+numpy==2.5.4
+opentelemetry-api==1.45.1
+packaging==26.3
+proto-plus==1.29.0
+protobuf==7.36.2
+pyasn1==0.6.4
+pyasn1-modules==0.4.2
+pycparser==3.12 ; implementation_name != 'PyPy' and platform_python_implementation != 'PyPy'
+pydantic==2.14.1
+pydantic-core==2.50.1
+pygments==2.21.0
+pypdf==6.21.2
+python-dateutil==2.9.0.post0
+pyyaml==6.0.3
+regex==2026.9.29
+requests==2.34.2
+rich==15.0.0
+safetensors==0.8.0
+scikit-learn==1.9.1
+scipy==1.18.1
+sentence-transformers==6.2.0
+setuptools==84.2.1
+shellingham==1.5.4
+six==1.17.0
+sniffio==1.3.1
+sympy==1.14.0
+tenacity==9.1.4
+threadpoolctl==3.7.0
+tokenizers==0.23.3
+torch==2.14.1 ; sys_platform != 'linux'
+torch==2.14.1+cpu ; sys_platform == 'linux'
+tqdm==4.70.1
+transformers==5.20.2
+truststore==0.10.5 ; sys_platform != 'emscripten'
+typer==0.27.3
+typing-extensions==4.16.0
+typing-inspection==0.4.4
+urllib3==2.8.0
+websockets==17.3
