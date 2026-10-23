@@ -77,7 +77,7 @@ def create_embeddings(project_id, location, bucket_name, processed_docs_prefix, 
             print(f"Warning: Could not extract content from {file_path}")
             continue
 
-        # Truncate content if too long (text-embedding-005 accepts up to 2,048 tokens)
+        # Truncate content if too long (text-embedding-005 accepts up to 2,048 tokens per text)
         content = content[:8000]
 
         try:

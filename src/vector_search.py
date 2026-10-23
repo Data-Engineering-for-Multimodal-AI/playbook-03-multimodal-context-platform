@@ -21,7 +21,7 @@ class VectorSearch:
             self.index = aiplatform.MatchingEngineIndex.create_tree_ah_index(
                 display_name=self.index_name,
                 contents_delta_uri=f"gs://{bucket_name}/vector-search/document-embeddings",
-                dimensions=dimensions,  # 768 for text-embedding-005
+                dimensions=dimensions,  # EMBEDDING_DIMENSIONS, 768 by default
                 approximate_neighbors_count=150,
             )
             

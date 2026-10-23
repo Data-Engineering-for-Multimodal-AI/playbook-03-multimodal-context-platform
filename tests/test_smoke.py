@@ -153,15 +153,37 @@ def test_person_search_runs(local_run):
 
 # ------------------------------------------------------- cloud path (mocked)
 
+def fake_genai_client(dims=2):
+    client = mock.MagicMock()
+    client.models.embed_content.side_effect = lambda model, contents, config: SimpleNamespace(
+        embeddings=[SimpleNamespace(values=[3.0, 4.0][:dims]) for _ in contents])
+    return client
+
+
 def test_cloud_embeddings_use_google_genai():
-    fake_client = mock.MagicMock()
-    fake_client.models.embed_content.return_value = SimpleNamespace(
-        embeddings=[SimpleNamespace(values=[0.1, 0.2])])
+    from google.genai import types
+    fake_client = fake_genai_client()
     with mock.patch("google.genai.Client", return_value=fake_client) as client_cls:
         vectors = kyc.Embedder(local=False, project="p", location="us-central1").embed(["hello"])
     client_cls.assert_called_once_with(vertexai=True, project="p", location="us-central1")
-    fake_client.models.embed_content.assert_called_once_with(model="text-embedding-005", contents=["hello"])
-    assert vectors == [[0.1, 0.2]]
+    fake_client.models.embed_content.assert_called_once_with(
+        model="text-embedding-005", contents=["hello"],
+        config=types.EmbedContentConfig(output_dimensionality=768))
+    assert vectors == [[0.6, 0.8]]   # unit length for the dot-product index
+
+
+def test_cloud_embedding_model_is_a_setting(monkeypatch):
+    monkeypatch.setattr(kyc, "CLOUD_EMBEDDING_MODEL", "gemini-embedding-001")
+    fake_client = fake_genai_client()
+    with mock.patch("google.genai.Client", return_value=fake_client):
+        embedder = kyc.Embedder(local=False, project="p", location="us-central1")
+        vectors = embedder.embed(["a", "b", "c"])
+    calls = fake_client.models.embed_content.call_args_list
+    assert [c.kwargs["model"] for c in calls] == ["gemini-embedding-001"] * 3   # one text per request
+    assert len(vectors) == 3
+    fake_client.models.embed_content.side_effect = lambda **kw: SimpleNamespace(embeddings=[])
+    with pytest.raises(RuntimeError, match="returned 0 embeddings for 1 texts"):
+        embedder.embed(["a"])
 
 
 def test_cloud_filter_is_a_list_of_namespaces():

@@ -4,16 +4,16 @@ import sys
 
 # Add the repository root to the path so we can import from src/
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from src.kyc import LOCAL_INDEX_FILE, build_local_index
+from src.kyc import CLOUD_EMBEDDING_DIMENSIONS, LOCAL_INDEX_FILE, build_local_index
 
 
-def main(project_id, location, bucket_name, index_name, dimensions=768):
+def main(project_id, location, bucket_name, index_name, dimensions=CLOUD_EMBEDDING_DIMENSIONS):
     """Set up vector search index and deploy it."""
     from src.vector_search import VectorSearch
 
     print(f"Setting up vector search for project: {project_id}")
     print(f"Using bucket: {bucket_name}")
-    print(f"Index name: {index_name}")
+    print(f"Index name: {index_name} ({dimensions} dimensions)")
 
     # Create and deploy the index
     print("Creating and deploying vector search index...")

@@ -2,6 +2,8 @@
 
 Cloud mode (as printed in the book): Google Document AI, Vertex AI embeddings
 (text-embedding-005 through the google-genai SDK) and Vertex AI Vector Search.
+Google renamed Vertex AI "Gemini Enterprise Agent Platform" in April 2026; the
+APIs and Python packages kept their names.
 
 Local mode (--local): the same steps on a laptop CPU with no cloud account.
 pypdf reads the PDFs, the text printed on each license card comes from
@@ -15,7 +17,10 @@ import os
 
 import numpy as np
 
-CLOUD_EMBEDDING_MODEL = "text-embedding-005"   # 768 dimensions
+# Cloud embedding model. Google retires text-embedding-005 on April 1, 2027; set
+# EMBEDDING_MODEL to its replacement then. The index keeps EMBEDDING_DIMENSIONS.
+CLOUD_EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "text-embedding-005")
+CLOUD_EMBEDDING_DIMENSIONS = int(os.environ.get("EMBEDDING_DIMENSIONS", "768"))
 LOCAL_EMBEDDING_MODEL = os.environ.get("LOCAL_EMBEDDING_MODEL",
                                        "sentence-transformers/all-MiniLM-L6-v2")  # 384 dimensions
 
@@ -100,7 +105,7 @@ def extract_local_text(path, sample_dir):
 # ----------------------------------------------------------------- embeddings
 
 class Embedder:
-    """Embeds texts with the local model or with Vertex AI text-embedding-005."""
+    """Embeds texts with the local model or with the Vertex AI model in EMBEDDING_MODEL."""
 
     def __init__(self, local, project=None, location=None):
         self.local = local
@@ -119,6 +124,7 @@ class Embedder:
         else:
             from google import genai
             self.model_name = CLOUD_EMBEDDING_MODEL
+            self.dimensions = CLOUD_EMBEDDING_DIMENSIONS
             self._client = genai.Client(vertexai=True, project=project, location=location)
 
     def embed(self, texts):
@@ -126,11 +132,23 @@ class Embedder:
             vectors = self._model.encode(list(texts), normalize_embeddings=True,
                                          show_progress_bar=False)
             return [v.tolist() for v in vectors]
+        from google.genai import types
+        config = types.EmbedContentConfig(output_dimensionality=self.dimensions)
+        # text-embedding-* models take up to 5 texts per request (under the token
+        # limit); send one text per request to the Gemini embedding models.
+        batch = 5 if self.model_name.startswith("text-") else 1
         out = []
-        for i in range(0, len(texts), 5):   # stay under the per-request token limit
-            response = self._client.models.embed_content(model=CLOUD_EMBEDDING_MODEL,
-                                                         contents=list(texts[i:i + 5]))
-            out.extend(e.values for e in response.embeddings)
+        for i in range(0, len(texts), batch):
+            chunk = list(texts[i:i + batch])
+            response = self._client.models.embed_content(model=self.model_name, contents=chunk,
+                                                         config=config)
+            if len(response.embeddings) != len(chunk):
+                raise RuntimeError(f"{self.model_name} returned {len(response.embeddings)} "
+                                   f"embeddings for {len(chunk)} texts")
+            for e in response.embeddings:
+                # Unit length: the Vector Search index ranks by dot product
+                v = np.asarray(e.values, dtype=np.float64)
+                out.append((v / np.linalg.norm(v)).tolist())
         return out
 
 

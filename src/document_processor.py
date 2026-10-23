@@ -95,7 +95,7 @@ class DocumentProcessor:
         return extracted_data
 
     def create_vector_embeddings(self, text: str) -> List[float]:
-        """Create vector embeddings using Vertex AI's text-embedding-005 model."""
+        """Create vector embeddings with the Vertex AI model in EMBEDDING_MODEL (text-embedding-005 by default)."""
         if self._embedder is None:
             self._embedder = Embedder(local=False, project=self.project_id, location=self.location)
         return self._embedder.embed([text])[0]
