@@ -20,7 +20,8 @@ The printed version is tagged `first-edition`.
 - README: the real clone URL and folder, Python 3.12+, and the `gsutil mkdir` lines, which fail (`gsutil mkdir` means `gsutil mb`).
 
 ### Changed
-- **Embeddings** go through the `google-genai` SDK with the same model, `text-embedding-005`. The `vertexai.language_models` API was scheduled for removal on June 24, 2026. Google lists `text-embedding-005` for retirement on April 1, 2027.
+- **Embeddings** go through the `google-genai` SDK with the same model, `text-embedding-005`. The `vertexai.language_models` API was scheduled for removal on June 24, 2026. Google lists `text-embedding-005` for retirement on April 1, 2027. The model is now a setting (`EMBEDDING_MODEL`, `EMBEDDING_DIMENSIONS` in `.env`) so readers can switch before then without editing code; cloud vectors are normalized for the index's dot-product ranking.
+- README: notes that Google renamed Vertex AI "Gemini Enterprise Agent Platform" (April 2026) with no API or code changes; `gcloud storage` equivalents next to the printed `gsutil` commands, which Google has deprecated; a note that Vector Search's index-and-endpoint version stays, next to its successor, Agent Retrieval.
 - **Utility bills** go to the Form Parser: Google discontinued the Utility Parser on June 30, 2026. Four processors instead of five.
 - The embeddings file holds only the fields Vector Search reads (`id`, `embedding`, `restricts`). The labels the search scripts print are in `vector-search/document-metadata.json`. First-edition files still work.
 - Processor IDs, project, bucket, location and endpoint come from environment variables instead of edits to the source. The printed flags still work.

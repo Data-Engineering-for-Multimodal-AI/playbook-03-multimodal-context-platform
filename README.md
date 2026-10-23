@@ -25,6 +25,8 @@ Every step runs in one of two modes:
 
 Both modes read the same 22 sample documents for five fictional customers and write files to the same relative paths (`processed-documents/`, `vector-search/`). The local mode uses a different embedding model, so its scores differ from a cloud run.
 
+> **Vertex AI has a new name.** In April 2026 Google renamed Vertex AI "Gemini Enterprise Agent Platform", and the console uses the new name. The API (`aiplatform.googleapis.com`), the Python packages and this code are unchanged, so this README keeps the book's name.
+
 ## Quick start
 
 You need Python 3.12 or newer. Local mode needs about 1.5 GB of disk space for the environment and no cloud account. Cloud mode needs a Google Cloud project with billing.
@@ -112,6 +114,12 @@ Note each processor's ID.
 gsutil mb -l us-central1 gs://YOUR_BUCKET_NAME/
 ```
 
+Google has deprecated `gsutil` in favor of `gcloud storage`. The printed `gsutil` lines still work; the current command is:
+
+```bash
+gcloud storage buckets create gs://YOUR_BUCKET_NAME --location=us-central1
+```
+
 The book also runs `gsutil mkdir gs://YOUR_BUCKET_NAME/data/` and similar lines for the folders. Skip them: `gsutil mkdir` is another name for `gsutil mb` (make bucket), so they fail with "The mb command requires a URL that specifies a bucket". Cloud Storage creates the folders as files are copied into them.
 
 #### 4. Configure
@@ -135,6 +143,16 @@ gsutil cp -r data/Utility/* gs://YOUR_BUCKET_NAME/data/Utility/
 gsutil cp data/Realistic_Bank_Statements.pdf gs://YOUR_BUCKET_NAME/data/
 ```
 
+Or with `gcloud storage`:
+
+```bash
+gcloud storage cp -r data/DrivingLicenses/* gs://YOUR_BUCKET_NAME/data/DrivingLicenses/
+gcloud storage cp -r data/W2Sample/* gs://YOUR_BUCKET_NAME/data/W2Sample/
+gcloud storage cp -r data/Form1040Sample/* gs://YOUR_BUCKET_NAME/data/Form1040Sample/
+gcloud storage cp -r data/Utility/* gs://YOUR_BUCKET_NAME/data/Utility/
+gcloud storage cp data/Realistic_Bank_Statements.pdf gs://YOUR_BUCKET_NAME/data/
+```
+
 #### 6. Run the pipeline
 
 ```bash
@@ -142,6 +160,8 @@ python scripts/process_documents.py --project YOUR_PROJECT_ID --bucket YOUR_BUCK
 python scripts/create_embeddings.py --project YOUR_PROJECT_ID --bucket YOUR_BUCKET_NAME
 python scripts/setup_vector_search.py --project YOUR_PROJECT_ID --bucket YOUR_BUCKET_NAME
 ```
+
+The embeddings use `text-embedding-005`, which Google retires on April 1, 2027. After that date, set `EMBEDDING_MODEL` in `.env` to its replacement (for example `gemini-embedding-001`) and run the pipeline again from `create_embeddings.py`. `EMBEDDING_DIMENSIONS` (768) sets the size of the vectors and of the index, so you don't need to change any code. A different model gives different scores, and this repository was tested only with `text-embedding-005`.
 
 `setup_vector_search.py` takes 30–45 minutes and prints the endpoint ID at the end (`projects/.../locations/us-central1/indexEndpoints/...`). Use it for the searches:
 
@@ -157,6 +177,7 @@ python scripts/search_documents.py --project YOUR_PROJECT_ID --bucket YOUR_BUCKE
 python scripts/teardown_vector_search.py --project YOUR_PROJECT_ID          # lists the index and endpoint
 python scripts/teardown_vector_search.py --project YOUR_PROJECT_ID --yes    # undeploys and deletes them
 gsutil -m rm -r gs://YOUR_BUCKET_NAME                                       # deletes the bucket and everything in it
+# or: gcloud storage rm --recursive gs://YOUR_BUCKET_NAME/
 ```
 
 Document AI is billed per page processed. Delete the processors in the console when you no longer need them.
@@ -194,7 +215,11 @@ The local mode was run end to end from a fresh clone on 3.12, and the results on
 | Running without Google Cloud | Not possible | `--local` on every script | Readers without a billed project can run every step |
 | Clone URL and folder | `pb3-mm-docretrievalpipeline` | `playbook-03-multimodal-context-platform` | The repository's actual name |
 | Python | 3.8+ | 3.12+ | Current dependencies |
-| Embeddings | `vertexai.language_models.TextEmbeddingModel` | `google-genai` (`client.models.embed_content`), same model `text-embedding-005` | Google deprecated that API in June 2025 and scheduled its removal for June 24, 2026. Google lists `text-embedding-005` for retirement on April 1, 2027; a newer model changes the dimensions and scores |
+| Embeddings | `vertexai.language_models.TextEmbeddingModel` | `google-genai` (`client.models.embed_content`), same model `text-embedding-005` | Google deprecated that API in June 2025 and scheduled its removal for June 24, 2026 |
+| Embedding model | Fixed in the code | `EMBEDDING_MODEL` and `EMBEDDING_DIMENSIONS` in `.env`; default `text-embedding-005`, 768 | Google retires `text-embedding-005` on April 1, 2027. The setting lets you switch models without editing code |
+| Product name | Vertex AI | The console says "Gemini Enterprise Agent Platform" | Google renamed it in April 2026. The APIs and code didn't change |
+| `gsutil` commands | `gsutil mb`, `gsutil cp`, `gsutil rm` | Kept, with the `gcloud storage` equivalent alongside | Google has deprecated `gsutil` |
+| Vector Search | Index and index endpoint | Unchanged | Google still supports this Vector Search. Its newer service, Agent Retrieval (formerly Vector Search 2.0), uses collections in place of indexes; moving to it would rewrite this chapter's cloud steps |
 | `--filter` | Crashed (a dict passed where a list of `Namespace` is expected) | Works | Bug |
 | Utility bills | Utility Parser | Form Parser | Google discontinued the Utility Parser on June 30, 2026 |
 | Processor IDs, project, bucket | Edited into `src/document_processor.py` and `scripts/process_documents.py` | Environment variables (`.env.example`); printed flags still work | No edits to code; no IDs in commits |
@@ -342,7 +367,7 @@ Found 3 similar documents:
 - **`Set DOCAI_..._PROCESSOR_ID`**: fill in the processor IDs in `.env` and load it (`set -a; source .env; set +a`).
 - **`DefaultCredentialsError`**: run `gcloud auth application-default login`.
 - **Document AI processing errors**: the processors must be in the location `DOCAI_LOCATION` names (`us` or `eu`).
-- **Vector Search errors**: the index has 768 dimensions for `text-embedding-005`. Embeddings from local mode (384) can't go into a cloud index.
+- **Vector Search errors**: the index has `EMBEDDING_DIMENSIONS` (768) dimensions. Embeddings from local mode (384) can't go into a cloud index. If you change `EMBEDDING_MODEL` or `EMBEDDING_DIMENSIONS`, rerun `create_embeddings.py` and create a new index.
 - **`local-index.npz not found`**: run the local steps in order; each reads the previous step's output from the current folder.
 
 ## License
