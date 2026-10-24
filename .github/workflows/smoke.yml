@@ -1,0 +1,36 @@
+name: smoke
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    # Sample data, the local pipeline, and the cloud calls with mocks (no cloud account)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
+      - name: Cache the embedding model
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/huggingface
+          key: hf-all-MiniLM-L6-v2
+      - name: Smoke test
+        run: make smoke
+      - name: Printed install path (pip install -r requirements.txt), local mode
+        run: |
+          uv venv --seed --python ${{ matrix.python-version }} /tmp/pipenv
+          /tmp/pipenv/bin/python -m pip install -q -r requirements.txt
+          /tmp/pipenv/bin/python scripts/process_documents.py --local
+          /tmp/pipenv/bin/python scripts/create_embeddings.py --local
+          /tmp/pipenv/bin/python scripts/setup_vector_search.py --local
+          /tmp/pipenv/bin/python scripts/search_documents.py --local
+          /tmp/pipenv/bin/python scripts/test_person_search.py --local

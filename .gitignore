@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Secrets
+.env
+
+# Pipeline output (recreated by the scripts)
+processed_docs/
+processed-documents/
+vector-search/
+embeddings.json
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Audit notes (maintainer only)
+AUDIT.md
