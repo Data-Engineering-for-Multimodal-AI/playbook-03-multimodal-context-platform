@@ -224,7 +224,7 @@ The book (pages 91–98) describes the pipeline without printing commands. The "
 | Vector Search | Index and index endpoint | Unchanged | Google still supports this Vector Search. Its newer service, Agent Retrieval (formerly Vector Search 2.0), uses collections in place of indexes; moving to it would rewrite this chapter's cloud steps |
 | `--filter` | Crashed (a dict passed where a list of `Namespace` is expected) | Works | Bug |
 | Utility bills | Utility Parser | Form Parser | Google discontinued the Utility Parser on June 30, 2026 |
-| Processor IDs, project, bucket | Edited into `src/document_processor.py` and `scripts/process_documents.py` | Environment variables (`.env.example`); printed flags still work | No edits to code; no IDs in commits |
+| Processor IDs, project, bucket | Edited into `src/document_processor.py` and `scripts/process_documents.py` | Environment variables (`.env.example`); the first edition's flags still work | No edits to code; no IDs in commits |
 | `gsutil mkdir gs://.../data/` lines | In the README | Skipped | `gsutil mkdir` means `gsutil mb` (make bucket) and fails on a folder path; Cloud Storage creates folders on upload |
 | Embedding file | Each record also held a `metadata` field | Records hold `id`, `embedding`, `restricts`; metadata goes to `vector-search/document-metadata.json` | Vector Search's input format has no `metadata` field. The search scripts still read first-edition files |
 | Failures | `setup_vector_search.py` exited 0 after failing; failed documents were embedded as their error message | Exit 1; failed documents are reported and skipped | Bugs |
