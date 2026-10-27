@@ -1,6 +1,6 @@
 # Multimodal Document Retrieval Pipeline
 
-**Chapter 3 playbook** from *Data Engineering for Multimodal AI* (O'Reilly, 2026). Page numbers to be confirmed.
+**Chapter 3 playbook** from *Data Engineering for Multimodal AI* (O'Reilly, 2026), pages 91–98 (Early Release page numbers; they may differ in the final print).
 Book: https://oreil.ly/data-engineering-multimodal
 
 > Want the code exactly as printed? Use the `first-edition` tag. This branch is the 2026 maintenance update; see [Differences from the printed book](#differences-from-the-printed-book).
@@ -120,7 +120,7 @@ Google has deprecated `gsutil` in favor of `gcloud storage`. The printed `gsutil
 gcloud storage buckets create gs://YOUR_BUCKET_NAME --location=us-central1
 ```
 
-The book also runs `gsutil mkdir gs://YOUR_BUCKET_NAME/data/` and similar lines for the folders. Skip them: `gsutil mkdir` is another name for `gsutil mb` (make bucket), so they fail with "The mb command requires a URL that specifies a bucket". Cloud Storage creates the folders as files are copied into them.
+The first-edition README also ran `gsutil mkdir gs://YOUR_BUCKET_NAME/data/` and similar lines for the folders. Skip them: `gsutil mkdir` is another name for `gsutil mb` (make bucket), so they fail with "The mb command requires a URL that specifies a bucket". Cloud Storage creates the folders as files are copied into them.
 
 #### 4. Configure
 
@@ -184,7 +184,7 @@ Document AI is billed per page processed. Delete the processors in the console w
 
 #### Cost
 
-The book estimates under $10 for 20–30 documents. That holds only if you clean up promptly: Document AI and the embeddings are billed per page and per request (cents here), but the deployed Vector Search index is billed per node-hour for as long as it stays deployed. Check the current [Vertex AI pricing](https://cloud.google.com/vertex-ai/pricing) before you start.
+The first-edition README estimated under $10 for 20–30 documents. That holds only if you clean up promptly: Document AI and the embeddings are billed per page and per request (cents here), but the deployed Vector Search index is billed per node-hour for as long as it stays deployed. Check the current [Vertex AI pricing](https://cloud.google.com/vertex-ai/pricing) before you start.
 
 ### Checks
 
@@ -209,7 +209,9 @@ The local mode was run end to end from a fresh clone on 3.12, and the results on
 
 ## Differences from the printed book
 
-| What | Printed book | Now | Why |
+The book (pages 91–98) describes the pipeline without printing commands. The "First edition" column is the code and README at the `first-edition` tag.
+
+| What | First edition | Now | Why |
 |---|---|---|---|
 | Sample documents | `gsutil cp data/DrivingLicenses/*` and the others failed: the 22 documents were never committed | 22 synthetic documents in `data/`, with the same customer names and file names, and a generator | The originals and their source were lost. See [Data and licenses](#data-and-licenses) |
 | Running without Google Cloud | Not possible | `--local` on every script | Readers without a billed project can run every step |
@@ -223,7 +225,7 @@ The local mode was run end to end from a fresh clone on 3.12, and the results on
 | `--filter` | Crashed (a dict passed where a list of `Namespace` is expected) | Works | Bug |
 | Utility bills | Utility Parser | Form Parser | Google discontinued the Utility Parser on June 30, 2026 |
 | Processor IDs, project, bucket | Edited into `src/document_processor.py` and `scripts/process_documents.py` | Environment variables (`.env.example`); printed flags still work | No edits to code; no IDs in commits |
-| `gsutil mkdir gs://.../data/` lines | Printed | Skipped | `gsutil mkdir` means `gsutil mb` (make bucket) and fails on a folder path; Cloud Storage creates folders on upload |
+| `gsutil mkdir gs://.../data/` lines | In the README | Skipped | `gsutil mkdir` means `gsutil mb` (make bucket) and fails on a folder path; Cloud Storage creates folders on upload |
 | Embedding file | Each record also held a `metadata` field | Records hold `id`, `embedding`, `restricts`; metadata goes to `vector-search/document-metadata.json` | Vector Search's input format has no `metadata` field. The search scripts still read first-edition files |
 | Failures | `setup_vector_search.py` exited 0 after failing; failed documents were embedded as their error message | Exit 1; failed documents are reported and skipped | Bugs |
 | Clean up | Not covered | `scripts/teardown_vector_search.py` and a Clean up section | The deployed index is billed per hour |
@@ -244,7 +246,7 @@ Never put real KYC documents in a public repository.
 
 ## Expected output
 
-From my run of the local mode on 2026-10-22: macOS 26.5.1 (arm64), Python 3.12.15, fresh clone, `pip install -r requirements.txt`. Python 3.13.16 gave identical results.
+From my run of the local mode on 2026-10-22: macOS 26.5.1 (arm64), Python 3.12.15, fresh clone, `pip install -r requirements.txt`. Python 3.13.16 gave identical results. This is the output of this version; it may differ from the output printed in the book, and that's okay.
 
 `python scripts/process_documents.py --local` (excerpt):
 

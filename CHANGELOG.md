@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026.10.1 (2026-10-27)
+
+### Changed
+- README, after checking against the book (Early Release, pages 91–98): page numbers; the `gsutil
+  mkdir` lines and the under-$10 estimate were in the first-edition README, not the book; the
+  differences table's left column is the first edition.
+
 ## 2026.10 (2026-10-22): 2026 maintenance update
 
 The printed version is tagged `first-edition`.
