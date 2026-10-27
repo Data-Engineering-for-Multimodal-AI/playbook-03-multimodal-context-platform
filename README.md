@@ -11,13 +11,13 @@ A semantic search system for KYC (Know Your Customer) documents: driver's licens
 
 ```
 data/ (JPEG, PDF) ──▶ 1. extract text ──▶ 2. embed ──▶ 3. index ──▶ 4. search
-                         Document AI       text-embedding-005   Vertex AI Vector Search   (cloud, as printed)
+                         Document AI       text-embedding-005   Vertex AI Vector Search   (cloud, first edition)
                          pypdf + card text all-MiniLM-L6-v2     NumPy matrix              (--local)
 ```
 
 Every step runs in one of two modes:
 
-| Step | Google Cloud (as printed) | Local (`--local`, laptop CPU, no account) |
+| Step | Google Cloud (first edition) | Local (`--local`, laptop CPU, no account) |
 |---|---|---|
 | Extract text | Document AI processors (OCR and entities) | pypdf for PDFs; the card text in `data/extracted_text/` for the license photos |
 | Embed | Vertex AI `text-embedding-005` (768 dimensions) | `all-MiniLM-L6-v2` (384 dimensions) |
@@ -46,7 +46,7 @@ source venv/bin/activate        # macOS / Linux
 # venv\Scripts\activate         # Windows
 ```
 
-### Step 3: Install dependencies (as printed)
+### Step 3: Install dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -75,7 +75,7 @@ python scripts/search_documents.py --local --query "James tax documents" --filte
 
 Categories for `--filter`: `ID`, `W2`, `Form1040`, `UtilityBill`, `BankStatement`.
 
-### Run it on Google Cloud (as printed in the book)
+### Run it on Google Cloud (as in the first edition)
 
 These steps create billed resources. A deployed Vector Search index is billed for every hour it stays deployed, so finish with [Clean up](#clean-up).
 
@@ -93,7 +93,7 @@ gcloud config set project YOUR_PROJECT_ID
 gcloud services enable documentai.googleapis.com
 gcloud services enable aiplatform.googleapis.com
 gcloud services enable storage.googleapis.com
-gcloud services enable vision.googleapis.com   # as printed; the scripts don't use the Vision API
+gcloud services enable vision.googleapis.com   # as in the first edition; the scripts don't use the Vision API
 ```
 
 #### 2. Set up Document AI processors
@@ -114,7 +114,7 @@ Note each processor's ID.
 gsutil mb -l us-central1 gs://YOUR_BUCKET_NAME/
 ```
 
-Google has deprecated `gsutil` in favor of `gcloud storage`. The printed `gsutil` lines still work; the current command is:
+Google has deprecated `gsutil` in favor of `gcloud storage`. The first edition's `gsutil` lines still work; the current command is:
 
 ```bash
 gcloud storage buckets create gs://YOUR_BUCKET_NAME --location=us-central1
@@ -131,7 +131,7 @@ cp .env.example .env            # then edit .env
 set -a; source .env; set +a
 ```
 
-You no longer edit IDs into the source files. The printed `--project` and `--bucket` flags still work and take precedence.
+You no longer edit IDs into the source files. The first edition's `--project` and `--bucket` flags still work and take precedence.
 
 #### 5. Upload the sample data
 
