@@ -5,6 +5,16 @@
 Nothing the book shows has changed.
 
 ### Added
+- `make search QUERY=...` (with optional `FILTER=` and `RESULTS=`) searches the local index.
+- `make check-data DIR=...` and `make load DIR=...`: check a folder of your own documents (laid
+  out like `data/`) and index it in local mode (`scripts/load_documents.py`). Tests in
+  `tests/test_own_data.py`.
+- Three measured experiments: `make try-hybrid`, `make try-chunks`, `make try-index-size`
+  (`experiments/`).
+- README: numbered Run it steps, time tiers, Try this, Use your own data, What you end up with,
+  Before production, and What it costs with an estimate for the cloud mode from Google's list prices.
+- CI: runs the Run it steps with checks on their output, the three experiments, the own-data
+  tests, and prints the time to first output in a clean devcontainer.
 - `make setup` and `make run`. `make run` runs the five pipeline steps in local mode (the same
   steps as `make local`) and prints the search results. No cloud account. `make smoke`,
   `make local`, `make data` and `make clean` are unchanged.
@@ -17,6 +27,9 @@ Nothing the book shows has changed.
   `GOOGLE_CLOUD_PROJECT` and falls back to the same placeholder.
 
 ### Changed
+- README: "What you'll build" is now "How it works"; "Quick start" is now "Run it the way the
+  book does", with its content unchanged. The first-edition note points to it.
+- `make clean` has a comment saying what it deletes (unchanged).
 - README opening: a title that says what you'll do, three sentences on why, the example and what you'll do, then the data engineering problem and what you'll work with.
 - Book page numbers now match the printed book (they were Early Release page numbers).
 

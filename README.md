@@ -7,11 +7,242 @@ A compliance reviewer asks for "tax documents for Laura" and needs the right fil
 
 **What you'll work with.** You'll turn every document into a common representation with embeddings, then retrieve only the context a request needs, using a managed AI platform (Vertex AI).
 
-> Want the code exactly as printed? Use the `first-edition` tag. This branch is the 2026 maintenance update; see [Differences from the printed book](#differences-from-the-printed-book).
+> Following the book? It describes the pipeline without printing commands; the first-edition README's steps, including the Google Cloud mode, are in [Run it the way the book does](#run-it-the-way-the-book-does) and still work as printed. Want the code exactly as printed? Use the `first-edition` tag. This branch is the 2026 maintenance update; see [Differences from the printed book](#differences-from-the-printed-book).
 
-## What you'll build
+## Run it
 
-A semantic search system for KYC (Know Your Customer) documents: driver's licenses, Forms W-2 and 1040, utility bills and bank statements. The pipeline extracts the text from each document, turns it into an embedding, indexes the embeddings, and answers natural-language queries such as "Form 1040 tax return" or "Mitchell Allen's tax information".
+You need [uv](https://docs.astral.sh/uv/) and `make`. This runs the local mode: no cloud account, no API keys, no Docker. Or open the repo in a GitHub Codespace, where both are ready. On Windows without `make`, use a Codespace or the steps below. The Google Cloud mode is under [Run it the way the book does](#run-it-the-way-the-book-does).
+
+**1. Get the code.** About 3 MB.
+
+```bash
+git clone https://github.com/Data-Engineering-for-Multimodal-AI/playbook-03-multimodal-context-platform.git
+cd playbook-03-multimodal-context-platform
+```
+
+**2. Build the index and run the example searches.** Installs the locked dependencies (`uv sync`) and runs the five scripts with `--local`: `process_documents.py` extracts the text of the 22 documents, `create_embeddings.py` embeds them (downloading `all-MiniLM-L6-v2`, about 90 MB, once), `setup_vector_search.py` builds the index, and `search_documents.py` and `test_person_search.py` run the example queries. On a Mac the first run took 1 min 35 s, most of it creating the 1.1 GB Python environment; a second run took 48 s.
+
+```bash
+make run
+```
+
+You should see 22 documents processed and embedded, then the searches:
+
+```
+Saved 22 embeddings (384 dimensions) to vector-search/document-embeddings/embeddings.json
+Local index: 22 vectors, 384 dimensions, saved to vector-search/local-index.npz
+...
+Query: 'Form 1040 tax return'
+Found 3 similar documents:
+1. processed-documents/AprilHensleyForm1040_pdf_processed.json (Form1040) - Score: 0.5541
+...
+=== Testing Query: 'Laura's KYC documents' ===
+1. JamesWilliamsForm1040_pdf_processed.json (Form1040) - Score: 0.2808
+```
+
+Document-type queries find the right type every time. Person queries often don't: James Williams's Form 1040 comes first for Laura. [Expected output](#expected-output) has the full results.
+
+**3. Ask your own question.** Runs `search_documents.py --local --query`:
+
+```bash
+make search QUERY="Laura Russo utility bill" RESULTS=3
+```
+
+```
+1. processed-documents/TaylorCoxWaterUtility_pdf_processed.json (UtilityBill) - Score: 0.3403
+2. processed-documents/LauraRussoUtility_pdf_processed.json (UtilityBill) - Score: 0.3369
+3. processed-documents/AprilHensleyUtility_pdf_processed.json (UtilityBill) - Score: 0.3269
+```
+
+All three are utility bills, and Laura's is second: the embedding matches the kind of document better than the name. Narrow a search to one category with `FILTER=` (`ID`, `W2`, `Form1040`, `UtilityBill`, `BankStatement`):
+
+```bash
+make search QUERY="James tax documents" FILTER=Form1040 RESULTS=3
+```
+
+```
+1. processed-documents/JamesWilliamsForm1040_pdf_processed.json (Form1040) - Score: 0.4881
+```
+
+**4. Clean up.**
+
+```bash
+make clean
+```
+
+This deletes the pipeline output: `processed-documents/` and `vector-search/` (the local index). The documents in `data/` stay, and so does the downloaded model (in `~/.cache/huggingface`, 87 MB).
+
+## How much time do you have?
+
+| Time | What to do |
+|---|---|
+| 15 minutes | [Run it](#run-it), steps 1 to 3. On a Mac, step 2 took 1 min 35 s the first time and 48 s after that. |
+| 1 hour | The three [Try this](#try-this) experiments (under 30 s each on a Mac), then your own queries with `make search`. |
+| 1 day | [Use your own data](#use-your-own-data) with your own documents, and work through [Before production](#before-production). The cloud mode takes longer: index setup alone takes 30 to 45 minutes. |
+
+## Try this
+
+Each experiment changes one thing and measures the effect. They read `data/` directly, use the local model, and write nothing. No cloud account. The numbers below are from a Mac on 2026-11-21.
+
+**1. Find a person's documents by meaning, by name, or both?** Runs the five person queries from `test_person_search.py` three ways and counts the documents in each top 3 that belong to the person asked about: by vector score alone (as the pipeline searches), by documents that contain the name in the query, and by vector score plus a bonus for the name. The bank statement file holds a page for every customer, so it counts for all five.
+
+```bash
+make try-hybrid
+```
+
+```
+Query                                      vector only name match hybrid   (right person in top 3)
+Laura's KYC documents                              1/3        3/3    3/3
+April Hensley's identification documents           1/3        3/3    3/3
+James Williams' personal information               2/3        3/3    3/3
+Taylor Cox's financial records                     2/3        3/3    3/3
+Mitchell Allen's tax information                   2/3        3/3    3/3
+All five queries                                  8/15      15/15  15/15
+```
+
+The embedding alone finds 8 of the 15; adding a check for the name finds all 15. Names are exact strings, and a small sentence embedding barely tells two names apart. Try a query that mixes a person and a type, such as "Laura's driver's license", and change `WEIGHT` in `experiments/hybrid_search.py`.
+
+**2. How much of each document does the embedding read?** `all-MiniLM-L6-v2` reads at most 256 tokens of a text, and `create_embeddings.py` sends each document as one text. This counts the tokens, then embeds each document whole (as the pipeline does) and in chunks, where a document scores as its best chunk.
+
+```bash
+make try-chunks
+```
+
+```
+22 documents, 103 to 2337 tokens each; the model reads 256.
+17 documents are longer; it ignores 62% of all tokens.
+
+Embedding                    vectors person queries type queries
+whole document                    22           8/15        12/12
+chunks of 256 tokens              62           9/15         9/12
+chunks of 128 tokens             110           8/15        12/12
+chunks of 64 tokens              211           8/15        12/12
+```
+
+The model ignores 62% of the text, but reading all of it in chunks doesn't find people any better (8 or 9 of 15), and 256-token chunks lose three of the type matches. Chunking also makes up to ten times as many vectors to store. For person queries, [Try this 1](#try-this)'s name check matters more than how much text is embedded. Change `CHUNK_SIZES` and run it again.
+
+**3. When does an exact search get too slow?** The local index (`LocalIndex` in `src/kyc.py`) scores the query against every vector, sorts all the scores and builds a Python list of every hit. This fills it with random vectors of the same size (384) and times 50 top-10 queries, then the same search with `argpartition`, which finds the top 10 without sorting everything. Both return the same results.
+
+```bash
+make try-index-size
+```
+
+```
+  vectors   memory  LocalIndex (sort all) top 10 only
+       22    0.0 MB                0.02 ms     0.01 ms
+   10,000   15.4 MB                5.49 ms     0.46 ms
+  100,000  153.6 MB               75.08 ms     9.78 ms
+  300,000  460.8 MB              209.27 ms    17.57 ms
+```
+
+For 22 documents, any search is instant. At 300,000 vectors each query takes 209 ms, and keeping only the top 10 cuts that to 18 ms. Past that, you need an approximate index like the cloud mode's Vector Search. Pass other sizes with `make try-index-size SIZES="1000 1000000"` (a million vectors need about 1.5 GB of memory).
+
+## Use your own data
+
+Put your documents in a folder with the same layout as `data/`:
+
+```
+my_documents/
+  DrivingLicenses/  jane_doe_dl.jpeg        photos or scans: .jpeg .jpg .png
+  W2Sample/         JaneDoeW2.pdf           PDFs with a text layer
+  Form1040Sample/   JaneDoeForm1040.pdf
+  Utility/          JaneDoeUtility.pdf
+  bank_statement.pdf                        outside those folders, the category comes from the file name
+  extracted_text/DrivingLicenses/jane_doe_dl.txt   the text on each image (local mode reads it in place of OCR)
+```
+
+The folder name sets the category that `FILTER=` selects. Never put real KYC documents in a public repository.
+
+Check it first. This reads every file and writes nothing:
+
+```bash
+make check-data DIR=my_documents
+```
+
+It reports every file the local pipeline would fail on, skip or mix up. On a test folder with mistakes in it:
+
+```
+10 documents in my_documents: 1 Form1040, 3 ID, 4 UtilityBill, 2 W2
+
+7 problem(s):
+  notes.docx: not a document type the pipeline reads (.pdf, .jpeg, .jpg, .png); it would be skipped
+  DrivingLicenses/JDDL.jpeg: Git LFS pointer, not the file (run git lfs pull)
+  DrivingLicenses/MADL.jpeg: no extracted_text/DrivingLicenses/MADL.txt; local mode reads the text on an image from there
+  Utility/broken.pdf: content is not a PDF file
+  Utility/scanned_bill.pdf: no text layer (a scan?); local mode can't read it. Add its text, or use cloud mode, where Document AI does OCR
+  W2Sample/scan.pdf: content is not a PDF file
+  Utility/LauraRussoW2.pdf, W2Sample/LauraRussoW2.pdf: would all be saved as processed-documents/LauraRussoW2_pdf_processed.json, and the last one would replace the others; rename one
+
+Fix or remove these files and run again. Nothing was written.
+```
+
+It also catches empty files, password-protected PDFs and card text files that aren't UTF-8, and notes documents with no known category or more than 8,000 characters (the part `create_embeddings.py` keeps). When everything passes, index your documents and search them:
+
+```bash
+make load DIR=my_documents
+make search QUERY="Laura's driver's license" RESULTS=3
+```
+
+```
+Indexed 4 documents. Search them with: make search QUERY="..."
+...
+1. processed-documents/LRDL_jpeg_processed.json (ID) - Score: 0.3943
+2. processed-documents/laura_tax_return_form1040_pdf_processed.json (Form1040) - Score: 0.3155
+3. processed-documents/LauraRussoW2_pdf_processed.json (W2) - Score: 0.2870
+```
+
+`make load` deletes the previous run's output (`processed-documents/` and `vector-search/`), so your documents aren't mixed with the samples, and runs steps 1 to 3 with `--local` on your folder. It took 10 s for four documents on a Mac. `make run` puts the samples back.
+
+## What you end up with
+
+A local search index over your own documents that answers plain-language requests, a checker that tells you which files it can't read, and three measurements of where embedding search falls short.
+
+Skills you'll practice:
+- Turning PDFs and images into one text representation
+- Embedding documents and searching them by cosine similarity
+- Filtering results by metadata (document category)
+- Combining vector search with exact matching on names
+- Validating documents before they reach the pipeline
+- Measuring retrieval quality and search time before changing anything
+
+## Before production
+
+This playbook runs on 22 synthetic documents. Before you run something like it for real:
+
+1. **Find people by entity, not by embedding.** The embedding alone found 8 of 15 of the right person's documents; adding a name match found 15 of 15 ([Try this 1](#try-this)). The cloud mode already extracts entities with Document AI (the `entities` field); index them and filter on them. *Chapter 3, "Selective Context Retrieval" (page 87); Chapter 6, "Hybrid Storage and Retrieval" (page 189).*
+2. **Split documents where they really split.** The local model ignores 62% of the text, and `Realistic_Bank_Statements.pdf` holds five customers' statements in one file, so its vector comes from the first page, Laura Russo's. Split multi-person files into one document per person before embedding, and decide how long documents are chunked ([Try this 2](#try-this)). *Chapter 3, "Stage 1: Document Parsing and Representation" (page 92).*
+3. **Use an approximate index at scale.** The local index sorts every score for every query: 209 ms per query at 300,000 vectors on a Mac ([Try this 3](#try-this)). The cloud mode's tree-AH index is approximate; measure its recall against an exact search on your data. *Chapter 3, "Stage 3: Vector Indexing" (page 94); Chapter 6, "Vector Databases" (page 180).*
+4. **Give every document a stable ID.** `processed_name()` builds the ID from the file name alone, so two files with the same name in different folders overwrite each other's processed file and embedding. Use the full path or a content hash. *Chapter 11, "Lineage and Provenance Tracking" (page 416).*
+5. **Count what was skipped.** `process_documents.py` exits 1 when a document fails, but a scanned PDF with no text layer doesn't fail in local mode: it is saved with empty text, and `create_embeddings.py` skips it with a warning and builds the index without it. Fail the run, or report the count, when documents go missing. *Chapter 4, "Validation, Transformation, Observability, and Annotation Across Modalities" (page 119).*
+6. **Record which model made the vectors.** The embeddings file stores the vectors and category but not the model. Local vectors (384 dimensions) and cloud vectors (768) can't be mixed, and `text-embedding-005` retires on April 1, 2027. Store the model name with the index and re-embed on a change. *Chapter 8, "Data Versioning and Experiment Tracking for Multimodal AI" (page 276).*
+7. **Tear down what bills by the hour.** A deployed Vector Search index is billed per node-hour while it is deployed, whether or not anyone searches. `scripts/teardown_vector_search.py --yes` removes it; see [What it costs](#what-it-costs). *Chapter 3, "Choosing Between Archetypes: A Cost and Complexity Framework" (page 82); Chapter 9, "Cost Optimization for Cloud-Based Multimodal AI Infrastructure" (page 342).*
+8. **Protect the documents and the snippets.** KYC files carry names, addresses and tax IDs. The metadata file keeps the first 200 characters of every document, and the search output prints 100 of them. Restrict access to the bucket and index, and keep personal data out of logs and snippets. *Chapter 11, "Protecting Data Across the Pipeline" (page 421); Chapter 11, "Compliance Across Modalities" (page 417).*
+
+## What it costs
+
+| Where you run it | Cost |
+|---|---|
+| Your machine (local mode) | $0. No cloud account, no API keys. About 1.2 GB of disk: 1.1 GB for the Python environment and 87 MB for the model. |
+| A GitHub Codespace (2 cores, 8 GB, the default size; the repo asks for nothing larger) | Estimated $0.18 per hour at GitHub's list price (November 2026). A free personal account includes 120 core-hours a month, about 60 hours on this machine. |
+| Google Cloud (cloud mode), the 22 sample documents | Estimated $4 for a run that keeps the index deployed for one hour, then about $0.75 for every further hour it stays deployed. Not measured: the cloud mode wasn't run for this update. Breakdown below. |
+
+The cloud estimate is Google's list price (us-central1, November 2026) times the workload the local run measured: 22 documents, 33 pages, 47,612 characters embedded.
+
+| Service | Workload | List price | Estimated |
+|---|---|---|---|
+| Document AI, US Driver License Parser | 5 documents | $0.10 per document | $0.50 |
+| Document AI, W2 Parser | 5 documents | $0.30 per document | $1.50 |
+| Document AI, Form Parser | 16 pages (5 Forms 1040 of 2 pages, 6 utility bills) | $30 per 1,000 pages | $0.48 |
+| Document AI, Bank Statement Parser | 1 document | $0.75 per document | $0.75 |
+| Embeddings, `text-embedding-005` | 47,612 characters | $0.000025 per 1,000 characters | under $0.01 |
+| Vector Search, index build | 22 vectors × 768 dimensions × 4 bytes | $3.00 per GiB | under $0.01 |
+| Vector Search, deployed index | 1 node, e2-standard-16 (assumed: the default for the default medium shard size) | $0.75 per node-hour | $0.75 per hour |
+
+Sources: [Document AI pricing](https://cloud.google.com/document-ai/pricing), [Vertex AI pricing](https://cloud.google.com/vertex-ai/pricing) (Vector Search), [Generative AI on Vertex AI pricing](https://cloud.google.com/vertex-ai/generative-ai/pricing) (embeddings). Cloud Storage for a few MB is a fraction of a cent. Check the pages before you start; the first-edition README's "under $10" holds only if you tear the index down the same day.
+
+## How it works
+
+The pipeline extracts the text from each KYC (Know Your Customer) document, turns it into an embedding, indexes the embeddings, and answers queries such as "Form 1040 tax return" or "Mitchell Allen's tax information".
 
 ```
 data/ (JPEG, PDF) ──▶ 1. extract text ──▶ 2. embed ──▶ 3. index ──▶ 4. search
@@ -31,7 +262,9 @@ Both modes read the same 22 sample documents for five fictional customers and wr
 
 > **Vertex AI has a new name.** In April 2026 Google renamed Vertex AI "Gemini Enterprise Agent Platform", and the console uses the new name. The API (`aiplatform.googleapis.com`), the Python packages and this code are unchanged, so this README keeps the book's name.
 
-## Quick start
+## Run it the way the book does
+
+The book describes this pipeline in four stages (pages 90–97) without printing commands. These are the first-edition README's steps, as printed apart from the fixes in [Differences from the printed book](#differences-from-the-printed-book). The `make` targets in [Run it](#run-it) run the same local-mode scripts.
 
 You need Python 3.12 or newer. Local mode needs about 1.5 GB of disk space for the environment and no cloud account. Cloud mode needs a Google Cloud project with billing.
 
@@ -198,6 +431,8 @@ make smoke    # or: uv run pytest -q
 
 `make smoke` (about 1 minute on a laptop CPU) checks the sample data, runs the five steps in local mode, and checks the cloud calls with mocks: the google-genai embedding call, the category filter, processor routing, exit codes and teardown. GitHub Actions runs it on Python 3.12 and 3.13, plus the printed `pip install -r requirements.txt` path.
 
+`uv run --frozen pytest -q tests/test_own_data.py` checks the loader behind `make check-data` and `make load` ([Use your own data](#use-your-own-data)).
+
 ## Tested on
 
 | | |
@@ -361,7 +596,10 @@ Found 3 similar documents:
 │   ├── kyc.py                     # shared helpers: categories, text extraction, embeddings, local index
 │   ├── document_processor.py      # the cloud steps as one class (not used by the scripts)
 │   └── vector_search.py           # Vector Search index, endpoint and queries
+├── scripts/load_documents.py      # make check-data / make load: your own documents
+├── experiments/                   # make try-hybrid, try-chunks, try-index-size
 ├── tests/test_smoke.py            # make smoke
+├── tests/test_own_data.py         # checks for scripts/load_documents.py
 ├── .env.example                   # cloud settings
 ├── pyproject.toml, uv.lock        # dependencies (uv)
 └── requirements.txt               # pinned, exported from uv.lock

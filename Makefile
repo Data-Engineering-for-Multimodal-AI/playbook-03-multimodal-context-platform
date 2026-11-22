@@ -1,4 +1,4 @@
-.PHONY: setup run smoke local data clean
+.PHONY: setup run smoke local search check-data load try-hybrid try-chunks try-index-size data clean
 
 # A bare `make` runs the smoke test, as it did before the uniform targets were added.
 .DEFAULT_GOAL := smoke
@@ -28,9 +28,40 @@ local:
 	uv run --frozen python scripts/search_documents.py --local
 	uv run --frozen python scripts/test_person_search.py --local
 
+# Search the local index (after make run or make load). FILTER and RESULTS are optional.
+#   make search QUERY="Laura Russo utility bill"
+#   make search QUERY="James tax documents" FILTER=Form1040 RESULTS=3
+search:
+	@test -n "$(QUERY)" || { echo 'Usage: make search QUERY="a request"  [FILTER=Form1040] [RESULTS=5]'; exit 2; }
+	uv run --frozen python scripts/search_documents.py --local --query "$(QUERY)" \
+		--results $(or $(RESULTS),5) $(if $(FILTER),--filter $(FILTER))
+
+# Your own documents, laid out like data/. check-data checks every file and writes nothing;
+# load replaces the local index with your documents.
+#   make check-data DIR=my_documents
+#   make load DIR=my_documents
+check-data: setup
+	@test -n "$(DIR)" || { echo "Usage: make check-data DIR=path/to/folder"; exit 2; }
+	uv run --frozen python scripts/load_documents.py --dir "$(DIR)" --check-only
+
+load: setup
+	@test -n "$(DIR)" || { echo "Usage: make load DIR=path/to/folder"; exit 2; }
+	uv run --frozen python scripts/load_documents.py --dir "$(DIR)"
+
+# Try this: three measured experiments (see README, "Try this"). Local, no cloud account.
+try-hybrid: setup
+	uv run --frozen python experiments/hybrid_search.py
+
+try-chunks: setup
+	uv run --frozen python experiments/chunking.py
+
+try-index-size: setup
+	uv run --frozen python experiments/index_size.py $(SIZES)
+
 # Regenerate the synthetic documents in data/ (identical output)
 data:
 	uv run --frozen python scripts/generate_sample_data.py
 
+# Delete the pipeline output (processed documents and the local index). data/ is kept.
 clean:
 	rm -rf processed-documents processed_docs vector-search embeddings.json
