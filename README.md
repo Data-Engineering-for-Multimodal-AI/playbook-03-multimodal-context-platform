@@ -1,7 +1,11 @@
-# Multimodal Document Retrieval Pipeline
+# Playbook 03: Find the right documents from a plain-language request
+**How to build a document retrieval pipeline for KYC documents.** Chapter 3 of [*Data Engineering for Multimodal AI*](https://oreil.ly/data-engineering-multimodal) (O'Reilly, 2026), pages 90–97.
 
-**Chapter 3 playbook** from *Data Engineering for Multimodal AI* (O'Reilly, 2026), pages 90–97.
-Book: https://oreil.ly/data-engineering-multimodal
+A compliance reviewer asks for "tax documents for Laura" and needs the right files back, not every file with "tax" in it. In this repo, we explore this with Revault, a fictional investment platform, and its identity and tax documents. Follow along to build a retrieval pipeline that answers plain-language requests with the matching documents.
+
+**The problem.** An agent works best with only the documents that matter for a request, but the documents are a mix of photographed IDs and PDF tax forms, utility bills and bank statements, with no shared structure.
+
+**What you'll work with.** You'll turn every document into a common representation with embeddings, then retrieve only the context a request needs, using a managed AI platform (Vertex AI).
 
 > Want the code exactly as printed? Use the `first-edition` tag. This branch is the 2026 maintenance update; see [Differences from the printed book](#differences-from-the-printed-book).
 
