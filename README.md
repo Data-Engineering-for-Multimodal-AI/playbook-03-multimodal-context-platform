@@ -1,6 +1,6 @@
 # Multimodal Document Retrieval Pipeline
 
-**Chapter 3 playbook** from *Data Engineering for Multimodal AI* (O'Reilly, 2026), pages 91–98 (Early Release page numbers; they may differ in the final print).
+**Chapter 3 playbook** from *Data Engineering for Multimodal AI* (O'Reilly, 2026), pages 90–97.
 Book: https://oreil.ly/data-engineering-multimodal
 
 > Want the code exactly as printed? Use the `first-edition` tag. This branch is the 2026 maintenance update; see [Differences from the printed book](#differences-from-the-printed-book).
@@ -209,7 +209,7 @@ The local mode was run end to end from a fresh clone on 3.12, and the results on
 
 ## Differences from the printed book
 
-The book (pages 91–98) describes the pipeline without printing commands. The "First edition" column is the code and README at the `first-edition` tag.
+The book (pages 90–97) describes the pipeline without printing commands. The "First edition" column is the code and README at the `first-edition` tag.
 
 | What | First edition | Now | Why |
 |---|---|---|---|

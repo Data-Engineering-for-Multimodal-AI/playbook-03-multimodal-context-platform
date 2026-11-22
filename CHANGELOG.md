@@ -16,6 +16,9 @@ Nothing the book shows has changed.
 - `src/vector_search.py` hard-coded `"YOUR_PROJECT_ID"` in its example. It now reads
   `GOOGLE_CLOUD_PROJECT` and falls back to the same placeholder.
 
+### Changed
+- Book page numbers now match the printed book (they were Early Release page numbers).
+
 ## 2026.10.1 (2026-10-27)
 
 ### Changed
