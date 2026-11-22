@@ -1,4 +1,17 @@
-.PHONY: smoke local data clean
+.PHONY: setup run smoke local data clean
+
+# Uniform targets for The Playbooks. The book prints no commands for this playbook. The README's
+# commands (pip install -r requirements.txt, scripts/*.py --local, and the cloud mode with
+# --project and --bucket) still work as printed.
+
+# Install the locked dependencies into .venv.
+setup:
+	uv sync --frozen
+
+# Run the five pipeline steps in local mode on the sample documents in data/ and print the search
+# results. CPU only, no cloud account. Same steps as `make local`.
+run: setup
+	@$(MAKE) --no-print-directory local
 
 # Sample data, the local pipeline and the cloud calls (mocked). CPU only, no cloud account.
 smoke:

@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased (v1.1.0)
+
+Nothing the book shows has changed.
+
+### Added
+- `make setup` and `make run`. `make run` runs the five pipeline steps in local mode (the same
+  steps as `make local`) and prints the search results. No cloud account. `make smoke`,
+  `make local`, `make data` and `make clean` are unchanged.
+- `.devcontainer/` so the repo opens in GitHub Codespaces with dependencies installed.
+- CI: a weekly scheduled run, a `make run` step, and a job that builds the devcontainer and runs
+  `make run` inside it.
+
+### Fixed
+- `src/vector_search.py` hard-coded `"YOUR_PROJECT_ID"` in its example. It now reads
+  `GOOGLE_CLOUD_PROJECT` and falls back to the same placeholder.
+
 ## 2026.10.1 (2026-10-27)
 
 ### Changed

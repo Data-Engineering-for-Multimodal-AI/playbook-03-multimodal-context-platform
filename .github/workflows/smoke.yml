@@ -4,6 +4,8 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1"   # weekly, Monday 06:00 UTC, so breakage in upstream packages shows up
 
 jobs:
   smoke:
@@ -25,6 +27,8 @@ jobs:
           key: hf-all-MiniLM-L6-v2
       - name: Smoke test
         run: make smoke
+      - name: One-command run
+        run: make run
       - name: Printed install path (pip install -r requirements.txt), local mode
         run: |
           uv venv --seed --python ${{ matrix.python-version }} /tmp/pipenv
@@ -34,3 +38,14 @@ jobs:
           /tmp/pipenv/bin/python scripts/setup_vector_search.py --local
           /tmp/pipenv/bin/python scripts/search_documents.py --local
           /tmp/pipenv/bin/python scripts/test_person_search.py --local
+
+  devcontainer:
+    # Builds .devcontainer/ the way Codespaces does and runs the playbook inside it.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build the devcontainer and run the playbook
+        uses: devcontainers/ci@v0.3
+        with:
+          push: never
+          runCmd: make run
