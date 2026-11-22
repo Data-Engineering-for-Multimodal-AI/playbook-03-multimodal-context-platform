@@ -223,7 +223,7 @@ This playbook runs on 22 synthetic documents. Before you run something like it f
 | Where you run it | Cost |
 |---|---|
 | Your machine (local mode) | $0. No cloud account, no API keys. About 1.2 GB of disk: 1.1 GB for the Python environment and 87 MB for the model. |
-| A GitHub Codespace (2 cores, 8 GB, the default size; the repo asks for nothing larger) | Estimated $0.18 per hour at GitHub's list price (November 2026). A free personal account includes 120 core-hours a month, about 60 hours on this machine. |
+| A GitHub Codespace (2 cores, 8 GB, the default size; the repo asks for nothing larger) | Estimated $0.18 per hour at GitHub's list price (November 2026). A free personal account includes 120 core-hours a month, about 60 hours on this machine. In CI, `make run` took 125 s in a freshly built devcontainer, including the model download. |
 | Google Cloud (cloud mode), the 22 sample documents | Estimated $4 for a run that keeps the index deployed for one hour, then about $0.75 for every further hour it stays deployed. Not measured: the cloud mode wasn't run for this update. Breakdown below. |
 
 The cloud estimate is Google's list price (us-central1, November 2026) times the workload the local run measured: 22 documents, 33 pages, 47,612 characters embedded.
