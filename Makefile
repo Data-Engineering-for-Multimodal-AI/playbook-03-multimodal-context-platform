@@ -1,5 +1,8 @@
 .PHONY: setup run smoke local data clean
 
+# A bare `make` runs the smoke test, as it did before the uniform targets were added.
+.DEFAULT_GOAL := smoke
+
 # Uniform targets for The Playbooks. The book prints no commands for this playbook. The README's
 # commands (pip install -r requirements.txt, scripts/*.py --local, and the cloud mode with
 # --project and --bucket) still work as printed.
