@@ -1,3 +1,5 @@
+import os
+
 from google.cloud import aiplatform
 from google.cloud.aiplatform.matching_engine.matching_engine_index_endpoint import Namespace
 from typing import List, Dict, Optional
@@ -122,7 +124,8 @@ class VectorSearch:
 
 def main():
     # Example usage
-    project_id = "YOUR_PROJECT_ID"  # Replace with your GCP project ID
+    # Your GCP project ID. Set GOOGLE_CLOUD_PROJECT (see .env.example) or replace the default.
+    project_id = os.environ.get("GOOGLE_CLOUD_PROJECT", "YOUR_PROJECT_ID")
     location = "us-central1"        # Replace with your preferred location
     bucket_name = "YOUR_BUCKET_NAME" # Replace with your GCS bucket name
     

@@ -4,6 +4,8 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1"   # weekly, Monday 06:00 UTC, so breakage in upstream packages shows up
 
 jobs:
   smoke:
@@ -25,6 +27,28 @@ jobs:
           key: hf-all-MiniLM-L6-v2
       - name: Smoke test
         run: make smoke
+      # README "Run it", steps 2-3: make run, then searches by hand
+      - name: Run it, steps 2-3
+        run: |
+          make run | tee /tmp/run.txt
+          grep -q "Saved 22 embeddings (384 dimensions)" /tmp/run.txt
+          grep -q "1. processed-documents/AprilHensleyForm1040_pdf_processed.json (Form1040)" /tmp/run.txt
+          make search QUERY="Laura Russo utility bill" RESULTS=3 | tee /tmp/search.txt
+          grep -q "2. processed-documents/LauraRussoUtility_pdf_processed.json" /tmp/search.txt
+          make search QUERY="James tax documents" FILTER=Form1040 RESULTS=3 | tee /tmp/filter.txt
+          grep -q "1. processed-documents/JamesWilliamsForm1040_pdf_processed.json (Form1040)" /tmp/filter.txt
+      - name: Use your own data (file checks)
+        run: |
+          uv run --frozen pytest -q tests/test_own_data.py
+          make check-data DIR=data | tee /tmp/check.txt
+          grep -q "All files passed the checks." /tmp/check.txt
+      - name: Try this 1, 2 and 3
+        run: |
+          make try-hybrid | tee /tmp/t1.txt
+          grep -q "All five queries .* 8/15 .*15/15 .*15/15" /tmp/t1.txt
+          make try-chunks | tee /tmp/t2.txt
+          grep -q "it ignores 62% of all tokens" /tmp/t2.txt
+          make try-index-size
       - name: Printed install path (pip install -r requirements.txt), local mode
         run: |
           uv venv --seed --python ${{ matrix.python-version }} /tmp/pipenv
@@ -34,3 +58,15 @@ jobs:
           /tmp/pipenv/bin/python scripts/setup_vector_search.py --local
           /tmp/pipenv/bin/python scripts/search_documents.py --local
           /tmp/pipenv/bin/python scripts/test_person_search.py --local
+
+  devcontainer:
+    # Builds .devcontainer/ the way Codespaces does and runs the playbook inside it.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build the devcontainer and run the playbook
+        uses: devcontainers/ci@v0.3
+        with:
+          push: never
+          # make run, timed from a clean devcontainer
+          runCmd: start=$(date +%s) && make run && echo "Time to first output in a clean devcontainer was $(( $(date +%s) - start )) s"
