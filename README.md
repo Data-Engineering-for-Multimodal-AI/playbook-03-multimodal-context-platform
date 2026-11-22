@@ -614,6 +614,8 @@ Found 3 similar documents:
 - **Vector Search errors**: the index has `EMBEDDING_DIMENSIONS` (768) dimensions. Embeddings from local mode (384) can't go into a cloud index. If you change `EMBEDDING_MODEL` or `EMBEDDING_DIMENSIONS`, rerun `create_embeddings.py` and create a new index.
 - **`local-index.npz not found`**: run the local steps in order; each reads the previous step's output from the current folder.
 
+If this playbook helped you, a star helps other readers find it.
+
 ## License
 
 MIT; see [LICENSE](LICENSE). The sample documents in `data/` are MIT-licensed too.
