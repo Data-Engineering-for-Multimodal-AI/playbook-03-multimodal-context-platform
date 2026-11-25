@@ -15,6 +15,7 @@ setup:
 # results. CPU only, no cloud account. Same steps as `make local`.
 run: setup
 	@$(MAKE) --no-print-directory local
+	@echo "playbook-03-multimodal-context-platform" > .playbook-done
 
 # Sample data, the local pipeline and the cloud calls (mocked). CPU only, no cloud account.
 smoke:

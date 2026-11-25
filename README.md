@@ -483,6 +483,8 @@ Every person, company, address and number in them is invented. The SSNs are in t
 
 Never put real KYC documents in a public repository.
 
+The full list, with sources, licenses and citations, is in [DATA_LICENSES.md](DATA_LICENSES.md).
+
 ## Expected output
 
 From my run of the local mode on 2026-10-22: macOS 26.5.1 (arm64), Python 3.12.15, fresh clone, `pip install -r requirements.txt`. Python 3.13.16 gave identical results. This is the output of this version; it may differ from the output printed in the book, and that's okay.
