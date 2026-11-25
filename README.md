@@ -1,5 +1,15 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/header-dark.png">
+  <img src="docs/img/header-light.png" alt="Playbook 03 of 12, Chapter 3 of Data Engineering for Multimodal AI. Build: a document retrieval pipeline. Data: documents and text." width="100%">
+</picture>
+
 # Playbook 03: Find the right documents from a plain-language request
 **How to build a document retrieval pipeline for KYC documents.** Chapter 3 of [*Data Engineering for Multimodal AI*](https://oreil.ly/data-engineering-multimodal) (O'Reilly, 2026), pages 90–97.
+
+[![Tests](https://github.com/Data-Engineering-for-Multimodal-AI/playbook-03-multimodal-context-platform/actions/workflows/smoke.yml/badge.svg?branch=main)](https://github.com/Data-Engineering-for-Multimodal-AI/playbook-03-multimodal-context-platform/actions/workflows/smoke.yml)
+![Python 3.12 | 3.13](https://img.shields.io/badge/python-3.12%20%7C%203.13-1f1a19?labelColor=6b6361)
+[![License: MIT](https://img.shields.io/badge/license-MIT-1f1a19?labelColor=6b6361)](LICENSE)
+[![Open in GitHub Codespaces](https://img.shields.io/badge/Open%20in-Codespaces-b4422e?logo=github&labelColor=6b6361)](https://codespaces.new/Data-Engineering-for-Multimodal-AI/playbook-03-multimodal-context-platform?quickstart=1)
 
 A compliance reviewer asks for "tax documents for Laura" and needs the right files back, not every file with "tax" in it. In this repo, we explore this with Revault, a fictional investment platform, and its identity and tax documents. Follow along to build a retrieval pipeline that answers plain-language requests with the matching documents.
 
@@ -242,6 +252,18 @@ Sources: [Document AI pricing](https://cloud.google.com/document-ai/pricing), [V
 
 ## How it works
 
+```mermaid
+flowchart LR
+  A["KYC documents<br/>JPEG IDs and PDF forms"] --> B["Extract text<br/>Document AI or pypdf"]
+  B --> C["Embed<br/>text-embedding-005 or MiniLM"]
+  C --> D["Index<br/>Vector Search or NumPy matrix"]
+  Q["Plain-language request<br/>embedded with the same model"] --> E["Search<br/>cosine similarity, category filter"]
+  D --> E
+  E --> F["Matching documents<br/>path, category, score"]
+  classDef key fill:#ffe8e3,stroke:#b4422e,color:#1f1a19
+  class E key
+```
+
 The pipeline extracts the text from each KYC (Know Your Customer) document, turns it into an embedding, indexes the embeddings, and answers queries such as "Form 1040 tax return" or "Mitchell Allen's tax information".
 
 ```
@@ -483,7 +505,7 @@ Every person, company, address and number in them is invented. The SSNs are in t
 
 Never put real KYC documents in a public repository.
 
-The full list, with sources, licenses and citations, is in [DATA_LICENSES.md](DATA_LICENSES.md).
+The full list, with sources, licenses and citations, is in [DATA_SOURCES.md](DATA_SOURCES.md).
 
 ## Expected output
 
@@ -621,3 +643,8 @@ If this playbook helped you, a star helps other readers find it.
 ## License
 
 MIT; see [LICENSE](LICENSE). The sample documents in `data/` are MIT-licensed too.
+
+---
+
+[The book](https://oreil.ly/data-engineering-multimodal) · [All playbooks](https://github.com/Data-Engineering-for-Multimodal-AI#playbooks) · Previous: [Playbook 02](https://github.com/Data-Engineering-for-Multimodal-AI/playbook-02-multimodal-feature-store-streambuy) · Next: [Playbook 04](https://github.com/Data-Engineering-for-Multimodal-AI/playbook-04-multimodal-ingestion-pipeline)
+<!-- Substack post for this playbook: add link here -->
