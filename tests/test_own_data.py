@@ -83,6 +83,25 @@ def test_same_processed_name(tmp_path):
     assert len(problems) == 1 and "LauraRussoW2_pdf_processed.json" in problems[0]
 
 
+def test_process_documents_rejects_output_collision_before_writing(tmp_path):
+    folder = good_folder(tmp_path / "docs")
+    (folder / "Utility").mkdir()
+    shutil.copy(folder / "W2Sample" / "LauraRussoW2.pdf", folder / "Utility" / "LauraRussoW2.pdf")
+    output = tmp_path / "processed"
+
+    result = subprocess.run(
+        [sys.executable, os.path.join(ROOT, "scripts", "process_documents.py"),
+         "--local", "--sample-data", str(folder), "--output", str(output)],
+        capture_output=True, text=True,
+    )
+
+    assert result.returncode == 1
+    assert str(folder / "Utility" / "LauraRussoW2.pdf") in result.stderr
+    assert str(folder / "W2Sample" / "LauraRussoW2.pdf") in result.stderr
+    assert "LauraRussoW2_pdf_processed.json" in result.stderr
+    assert not output.exists()
+
+
 def test_unknown_category_is_a_note(tmp_path):
     folder = good_folder(tmp_path)
     shutil.copy(folder / "W2Sample" / "LauraRussoW2.pdf", folder / "paystub.pdf")
