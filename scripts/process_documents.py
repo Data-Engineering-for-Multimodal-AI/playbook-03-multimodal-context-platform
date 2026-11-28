@@ -174,6 +174,19 @@ def main(project_id: str, bucket_name: str, sample_data_prefix: str, output_pref
         print("No documents found. Please check your bucket path.")
         return 1
 
+    inputs_by_output = {}
+    for doc in documents:
+        output_name = processed_name(doc["uri"])
+        key = os.path.normcase(output_name) if local else output_name
+        if key in inputs_by_output:
+            print(
+                f"Cannot process {inputs_by_output[key]} and {doc['uri']}: "
+                f"both map to {output_name}. Rename one input and try again.",
+                file=sys.stderr,
+            )
+            return 1
+        inputs_by_output[key] = doc["uri"]
+
     results, failed = [], 0
     for i, doc in enumerate(documents):
         print(f"Processing document {i+1}/{len(documents)}: {doc['name']}")
